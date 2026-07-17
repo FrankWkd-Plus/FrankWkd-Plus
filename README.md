@@ -33,13 +33,13 @@
 * ⛔ `[停止维护]`**CDK Management System**: 基于 Cloudflare Worker 的分发系统。  
 * ⛔ `[停止维护]`**Telegram Gemini Bot**: 基于 GeminiAPI 自动化响应的 AI 机器人。  
 * ⛔ `[停止维护]`[Sublink Pro](http://35.212.138.172:8000/dashboard/default): 基于开源项目二次开发的订阅管理系统&节点分发系统，由 GCP 托管。  
-> [!warning] 已经全域部署 Cloudflare Turnstile 攻击防护！  
+> **已经全域部署 Cloudflare Turnstile 攻击防护！**
 ---
 
 ---
 ## 🔎Fine me here  
   
-> [!tip] **保持沟通** 欢迎通过以下方式找到我👀。  
+> **保持沟通** 欢迎通过以下方式找到我👀。  
 - Nodeloc：[FlankW](https://www.nodeloc.com/u/FlankW/)  
 - Email: master@frankwkd2026.dpdns.org  
 - Github: [FrankWkd-Plus](https://github.com/FrankWkd-Plus)  
