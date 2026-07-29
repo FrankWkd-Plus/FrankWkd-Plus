@@ -2,7 +2,7 @@
 
 
 # Welcome to My Github!  <img width="147" height="28" alt="image" src="https://github.com/user-attachments/assets/95ce518d-1b67-4c5d-99cd-376dc72f8c8f" />
-# [我的个人主页Website](https://my.outwardly.dpdns.org/about/)
+> [个人主页&Blog](https://my.outwardly.dpdns.org/about/)
 
 > 📔 写在前面
 > - 请有话直说、一定要及时沟通🤍（本人可i可e）  
@@ -27,17 +27,18 @@
 | OI            | ![Luogu](https://img.shields.io/badge/-Luogu-3498DB?style=flat-square&logo=codeforces&logoColor=white)![LeetCode](https://img.shields.io/badge/-LeetCode-F7F7F7?style=flat-square&logo=leetcode&logoColor=black)![Codeforces](https://img.shields.io/badge/-Codeforces-445f9d?style=flat-square&logo=codeforces&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                                                            |
   
 ## 🛠️ Stack & Experience  
-- 🔮 [在线塔罗牌占卜](https://github.com/FrankWkd-Plus/Tarot-Game): 在线获取关于困扰你问题的塔罗牌占卜！支持AI分析 [DEMO](https://tarot.outwardly.dpdns.org/)
-- ⚙️ [2026 Tcamp 微信小程序 AI 创新挑战赛参赛项目](https://github.com/FrankWkd-Plus/2026-Tcamp-Mini-Program-Competition)
-- 🤖 [AI Workstation](https://ai-work-team-demo.pages.dev/AI_Group_Chat_Pro_Beta%E6%9C%80%E7%BB%88): 将多渠道AI进行聚合并协同合作进行开发。
+- 🧸 [Toy Diary](https://toydiary.outwardly.dpdns.org): 以玩偶的视角来记录&回忆你的美好生活
+- 📒 [Love-live-diary](https://diary.frankwkd2026.dpdns.org/): 双人日记本，支持评论功能、云同步、离线编辑、Markdown&图床支持
+- 🔮 [Tarot-Game](https://github.com/FrankWkd-Plus/Tarot-Game): 在线进行塔罗牌占卜 || 支持AI分析 [DEMO](https://tarot.outwardly.dpdns.org/)
+- 💡 [Progress Tracker](https://github.com/FrankWkd-Plus/2026-Tcamp-Mini-Program-Competition): 2026 Tcamp 微信小程序 AI 创新挑战赛参赛项目，托管在微信开发者平台的任务追踪软件。
+- 🤖 [AI Workstation](https://ai-work-team-demo.pages.dev/AI_Group_Chat_Pro_Beta%E6%9C%80%E7%BB%88): 将多渠道AI进行聚合、协同合作进行开发&探究，参照 DeepResearch。
 - 📜 [Personal Blog](https://blog.frankwkd2026.dpdns.org): 基于 Quartz 4 框架开发的博客网站  
-* 📝 [**Mail**](https://frankwkd2026.dpdns.org): 基于开源项目二次开发的域名邮局系统  
-* ✂️ [Pastebin](https://paste.frankwkd2026.dpdns.org):  加密 markdown 剪贴板  
+* 📝 [**Mail**](https://frankwkd2026.dpdns.org): 多域名聚合邮局系统，支持用户管理、邮件统计、0 成本 workers 托管。  
+* ✂️ [Pastebin](https://paste.frankwkd2026.dpdns.org):  markdown 剪贴板，支持短链接，支持密码加密，支持自动解锁（记忆）  
 * 👉 [Url Shorten](https://u.frankwkd2026.dpdns.org): 短链接生成器。  
 * 🛡️ [Website Proxy](https://proxy.frankwkd2026.dpdns.org/): 使用 Cloudflare Workers 进行网站反代  
 * 📊 [Github Download Agent](https://gh-agent.frankwkd2026.dpdns.org/): Github 文件下载 CDN 加速  
 * 🕸️ [CF Edge Node](https://sub.frankwkd2026.dpdns.org/): 利用 CF 边缘节点代理流量并声生成节点  
-- 💡 Progress Tracker: 托管在微信开发者平台的任务追踪软件。
 * 👀 [云服务器探针](https://status.frankwkd2026.dpdns.org): 利用 Beszel 框架开发的探针&资源监控，使用 Cloudflared Tunnel 进行端口转发。  
 * ⛔ `[停止维护]`**CDK Management System**: 基于 Cloudflare Worker 的分发系统。  
 * ⛔ `[停止维护]`**Telegram Gemini Bot**: 基于 GeminiAPI 自动化响应的 AI 机器人。  
