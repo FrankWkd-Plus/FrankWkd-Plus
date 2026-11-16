@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>抛物线 y=−(x−2)²+5 与菱形 ABCD · 动态演示</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#111827; --muted:#6b7280;
+    --line:#e6e8ec; --blue:#2563eb; --rose:#e11d48; --violet:#7c3aed;
+    --green:#059669; --sky:#0ea5e9; --amber:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink); line-height:1.68;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:30px 20px 80px}
+  header h1{font-size:21px;letter-spacing:.01em;margin:0 0 6px}
+  header p{margin:0;color:var(--muted);font-size:13.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px 20px;margin-top:18px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  h2{font-size:16.5px;margin:0 0 14px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  h2 .tag{font-size:11px;font-weight:700;color:#fff;background:#111827;border-radius:6px;padding:2px 7px;letter-spacing:.05em}
+  h3{font-size:14px;margin:18px 0 8px;color:#374151}
+  p{margin:8px 0}
+  .small{font-size:13px;color:var(--muted)}
+  .formula{font-family:"Cambria Math",Cambria,"Times New Roman",serif;font-size:15px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:block;margin:8px 0;overflow-x:auto;white-space:nowrap}
+  .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:5px;padding:1px 5px}
+
+  /* 结论卡 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
+  .k{background:#fbfcfd;border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .k b{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;margin-bottom:3px}
+  .k span{font-family:"Cambria Math",Cambria,"Times New Roman",serif;font-size:14.5px}
+
+  /* 动态演示 */
+  .demo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(284px,1fr);gap:16px}
+  @media (max-width:900px){ .demo{grid-template-columns:1fr} }
+  .stage{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  #mainCanvas{width:100%;height:498px;display:block;touch-action:none}
+  @media (max-width:900px){ #mainCanvas{height:372px} }
+  .panel{display:flex;flex-direction:column;gap:12px}
+  .ctrl{background:#fbfcfd;border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+  .slider-head{display:flex;align-items:baseline;justify-content:space-between;font-size:13px;color:#374151}
+  .slider-head b{font-family:"Cambria Math",Cambria,serif;font-size:18px;color:var(--blue)}
+  input[type=range]{width:100%;margin:10px 0 4px;accent-color:var(--blue);height:22px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chips button{
+    font:inherit;font-size:12px;line-height:1;padding:6px 8px;border-radius:7px;
+    border:1px solid #dfe3ea;background:#fff;color:#374151;cursor:pointer;
+  }
+  .chips button:hover{border-color:#b9cdf7;background:#f3f7ff}
+  .chips button.on{background:#eaf1ff;border-color:#9fc0f8;color:#1d4ed8;font-weight:600}
+  label.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#4b5563;margin-top:10px;cursor:pointer}
+  label.chk input{accent-color:var(--violet);width:15px;height:15px}
+
+  .readout{background:#fbfcfd;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:12.5px}
+  .readout .row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dashed #eceff4}
+  .readout .row:last-child{border-bottom:0}
+  .readout .row .v{font-family:"Cambria Math",Cambria,"Times New Roman",serif;color:#111827;text-align:right}
+  .readout .row .lb{color:var(--muted);white-space:nowrap}
+  .state{margin-top:8px;border-radius:8px;padding:7px 9px;font-size:12.5px;font-weight:600;text-align:center}
+  .state.ok{background:#e9f9f1;color:#047857;border:1px solid #b7ebd2}
+  .state.no{background:#fdeef1;color:#be123c;border:1px solid #f8c9d4}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#6b7280;margin-top:10px}
+  .legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+  /* 小图卡片 */
+  .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));gap:13px}
+  .panels-tall{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .panels-tall .panel-card canvas{height:326px}
+  .panel-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .panel-card canvas{width:100%;height:196px;display:block}
+  .panel-card .cap{padding:8px 10px 9px;border-top:1px solid var(--line);background:#fbfcfd}
+  .cap-t{font-family:"Cambria Math",Cambria,serif;font-size:13.5px;font-weight:600}
+  .cap-d{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.5}
+  .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;margin-top:5px}
+  .badge.ok{background:#e9f9f1;color:#047857}
+  .badge.no{background:#fdeef1;color:#be123c}
+  .badge.mid{background:#fff7e6;color:#b45309}
+
+  .nl{width:100%;height:auto;display:block;margin-top:6px}
+  table.t{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  table.t th,table.t td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  table.t th{background:#f8fafc;font-weight:600;color:#374151;white-space:nowrap}
+  table.t td.mono{font-family:"Cambria Math",Cambria,serif;white-space:nowrap}
+  ol.steps{padding-left:20px;margin:6px 0}
+  ol.steps li{margin:7px 0}
+  .note{font-size:12.5px;color:#6b7280;border-left:3px solid #dfe3ea;padding-left:10px;margin:10px 0}
+  .hl{background:#fff4d6;border-radius:3px;padding:0 3px}
+  footer{margin-top:22px;font-size:12px;color:#9ca3af;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>抛物线 y = −(x−2)² + 5 与菱形 ABCD · 参数 m 动态演示</h1>
+  <p>拖动滑块改变 m，观察 A、B、C、D 四点与菱形如何运动；玫红色加粗的一段是「抛物线落在菱形内部的弧」。</p>
+</header>
+
+<!-- ============ 题目 ============ -->
+<section class="card">
+  <h2><span class="tag">题目</span>原题（按截图整理）</h2>
+  <p>在平面直角坐标系 xOy 中，抛物线 y = −(x−2)² + h 过点 (0,1)。A、B 是此抛物线上不重合的两个动点，横坐标分别为 <b>m</b>、<b>2−m</b>；点 C 的横坐标为 <b>4−3m</b>，且 C 的纵坐标与 A 的纵坐标相等。以 BA、BC 为邻边构造 ▱ABCD。</p>
+  <ol class="steps">
+    <li>求该抛物线对应的函数表达式。</li>
+    <li>作直线 AB，求证：直线 AB 与横轴（x 轴）所夹锐角的大小不变。</li>
+    <li>当此抛物线在 ▱ABCD 内部的点的纵坐标 y 随 x 的增大而增大、或随 x 的增大而减小时，求 m 的取值范围。</li>
+    <li>当 m &lt; 1 时，▱ABCD 的边与直线 x = 1 的两个交点分别为 E、F；当 ▱ABCD 的边与该抛物线有交点时（▱ABCD 的顶点除外），设交点为 G，连结 GE、GF。当 △EFG 的面积是 ▱ABCD 面积的 1/4 时，直接写出此时 m 的值。</li>
+  </ol>
+</section>
+
+<!-- ============ 核心结论 ============ -->
+<section class="card">
+  <h2><span class="tag">结论</span>四个“不动”的结构（后续所有图形都由它们决定）</h2>
+  <div class="cards">
+    <div class="k"><b>(1) 抛物线</b><span>y = −(x−2)² + 5，顶点 E(2, 5)，对称轴 x = 2</span></div>
+    <div class="k"><b>(2) 斜率固定</b><span>k<sub>AB</sub> = (4−4m)/(2−2m) = 2，锐角 arctan2 ≈ 63.4° 不变</span></div>
+    <div class="k"><b>(3) 四点坐标</b><span>A(m, −m²+4m+1)、B(2−m, 5−m²)、C(4−3m, −m²+4m+1)、D(2−m, −m²+8m−3)</span></div>
+    <div class="k"><b>(4) 菱形</b><span>AC 水平、BD 竖直 ⇒ AC⊥BD；中心 (2−m, −m²+4m+1)，半对角 2|1−m|、4|1−m|；S = 16(1−m)²</span></div>
+  </div>
+  <p class="note">因为 y<sub>A</sub> = y<sub>C</sub> 恒成立、A 与 C 关于 BD 对称，所以 ▱ABCD 一定是菱形，第 (3)(4) 问的全部推理都建立在这一点上。</p>
+</section>
+
+<!-- ============ 动态演示 ============ -->
+<section class="card">
+  <h2><span class="tag">动态</span>拖动滑块：m 变化时发生了什么</h2>
+  <div class="demo">
+    <div class="stage"><canvas id="mainCanvas"></canvas></div>
+    <aside class="panel">
+      <div class="ctrl">
+        <div class="slider-head"><span>参数 <b>m</b></span><span id="mShown" style="font-family:Cambria,serif;font-size:15px">1.5</span></div>
+        <input type="range" id="mRange" min="-3" max="5" step="0.01" value="1.5">
+        <div class="chips" id="chips"></div>
+        <label class="chk"><input type="checkbox" id="chkTri"> 叠加 x = 1、E、F、G（第 (4) 问的构件）</label>
+      </div>
+      <div class="readout" id="readout"></div>
+      <div class="legend">
+        <span><i style="background:#7fa5ef"></i>抛物线</span>
+        <span><i style="background:#e11d48"></i>菱形内部的弧</span>
+        <span><i style="background:#9aa6b8"></i>菱形边</span>
+        <span><i style="background:#7c3aed"></i>顶点 E</span>
+        <span><i style="background:#f59e0b"></i>△EFG</span>
+      </div>
+    </aside>
+  </div>
+  <p class="small" style="margin-top:12px">视野会随 m 自动缩放（m 靠近 1 时菱形很小、m ≥ 4 时很大），因此个别位置坐标轴会落到视野外而不绘制；「叠加 x = 1」只对 m &lt; 1 有意义。</p>
+</section>
+
+<!-- ============ 第三问 ============ -->
+<section class="card">
+  <h2><span class="tag">第 (3) 问</span>“内部弧单调” ↔ “顶点 E 不在菱形内部”</h2>
+
+  <p>抛物线在菱形内部的那一段（玫红）本身是一条曲线。y 随 x 增大而单调，<b>等价于这一段不跨过对称轴 x = 2</b>；而它会跨过对称轴，唯一的原因是顶点 E(2,5) 严格落在菱形内部。</p>
+
+  <h3>① 菱形内部的判据</h3>
+  <p>菱形被两条对角线“锁定”在坐标轴方向上（AC 水平、BD 竖直），所以点 (x, y) 在菱形内部等价于</p>
+  <span class="formula">|x − (2−m)| / (2|1−m|) + |y − (−m²+4m+1)| / (4|1−m|) &lt; 1</span>
+
+  <h3>② E 严格在菱形内部 ⟺ 2 &lt; m &lt; 4</h3>
+  <p>把 E(2,5) 代入上式并去分母（m&lt;1 时得 2|m| + m² &lt; 0，无解；m&gt;1 时化为 m² − 6m + 8 &lt; 0）：</p>
+  <span class="formula">(m−2)(m−4) &lt; 0 ⟺ 2 &lt; m &lt; 4</span>
+  <p>此区间内玫红弧分成左右两段、跨过顶点，<b>既不单调增也不单调减，排除</b>。</p>
+
+  <h3>③ 另一类失效：内部弧根本不存在（0 ≤ m ≤ 1）</h3>
+  <p>m = 0 时 C(4,1) 恰在抛物线上，内部弧退化成零长；m = 1 时 A、B、C、D 四点重合于 (1,4)，图形退化。而 0 &lt; m &lt; 1 时，在 x ∈ (m, 2−m) 上</p>
+  <span class="formula">f(x) − y<sub>AB</sub> = −(x−m)(x−2+m) &gt; 0</span>
+  <p>即抛物弧恒在边 AB 的上方，而菱形内部在 AB 下方；x ∈ (2−m, 4−3m) 的部分又恒在边 BC 上方（BC 与抛物线的另一交点 x = 4+m 已落在菱形之外）。所以菱形内部<b>没有</b>抛物线上的点，条件无从谈起，同样排除。</p>
+
+  <h3>④ 结论</h3>
+  <span class="formula" style="border-color:#bbf7d0;background:#f2fdf7">m &lt; 0　或　1 &lt; m ≤ 2　或　m ≥ 4</span>
+
+  <h3>符合条件的情况图（点击参数可对照上方滑块）</h3>
+  <div class="panels" id="q3Panels"></div>
+
+  <h3>数轴表示</h3>
+  <svg class="nl" viewBox="0 0 900 132" role="img" aria-label="m 的取值范围数轴">
+    <line x1="46" y1="84" x2="862" y2="84" stroke="#b6bcc7" stroke-width="1.4"/>
+    <polygon points="862,84 850,79.5 850,88.5" fill="#b6bcc7"/>
+    <text x="872" y="89" font-size="13" fill="#8b93a1" font-style="italic">m</text>
+
+    <!-- 允许区间 -->
+    <rect x="46" y="78" width="315.8" height="12" rx="6" fill="rgba(16,185,129,.20)" stroke="#10b981" stroke-width="1.4"/>
+    <rect x="452" y="78" width="90.2" height="12" rx="6" fill="rgba(16,185,129,.20)" stroke="#10b981" stroke-width="1.4"/>
+    <rect x="722.7" y="78" width="129.3" height="12" rx="6" fill="rgba(16,185,129,.20)" stroke="#10b981" stroke-width="1.4"/>
+
+    <!-- 端点开闭 -->
+    <circle cx="361.8" cy="84" r="5.5" fill="#fff" stroke="#10b981" stroke-width="2"/>
+    <circle cx="452" cy="84" r="5.5" fill="#fff" stroke="#10b981" stroke-width="2"/>
+    <circle cx="542.2" cy="84" r="5.5" fill="#10b981"/>
+    <circle cx="722.7" cy="84" r="5.5" fill="#10b981"/>
+
+    <!-- 刻度 -->
+    <g stroke="#b6bcc7" stroke-width="1.2">
+      <line x1="91.1" y1="84" x2="91.1" y2="91"/>
+      <line x1="181.3" y1="84" x2="181.3" y2="91"/>
+      <line x1="271.6" y1="84" x2="271.6" y2="91"/>
+      <line x1="361.8" y1="84" x2="361.8" y2="91"/>
+      <line x1="452" y1="84" x2="452" y2="91"/>
+      <line x1="542.2" y1="84" x2="542.2" y2="91"/>
+      <line x1="632.4" y1="84" x2="632.4" y2="91"/>
+      <line x1="722.7" y1="84" x2="722.7" y2="91"/>
+      <line x1="812.9" y1="84" x2="812.9" y2="91"/>
+    </g>
+    <g font-size="12.5" fill="#98a1ae" text-anchor="middle">
+      <text x="91.1" y="108">−3</text><text x="181.3" y="108">−2</text><text x="271.6" y="108">−1</text>
+      <text x="361.8" y="108">0</text><text x="452" y="108">1</text><text x="542.2" y="108">2</text>
+      <text x="632.4" y="108">3</text><text x="722.7" y="108">4</text><text x="812.9" y="108">5</text>
+    </g>
+    <g font-size="13.5" font-weight="700" fill="#047857" text-anchor="middle">
+      <text x="200" y="64">m &lt; 0</text>
+      <text x="497" y="64">1 &lt; m ≤ 2</text>
+      <text x="787" y="64">m ≥ 4</text>
+    </g>
+    <g font-size="12" fill="#be123c" text-anchor="middle">
+      <text x="407" y="64">✗ 0 ≤ m ≤ 1</text>
+      <text x="632" y="64">✗ 2 &lt; m &lt; 4</text>
+    </g>
+  </svg>
+  <p class="small">说明：0 &lt; m &lt; 1 与 m = 1 时菱形内部无抛物线点；m = 0 时内部弧退化为一点。m = 2 时 A 与顶点 E 重合、m = 4 时 E 落在边 AD 上，这两种“相切”情形内部弧仍单调，取等号。</p>
+</section>
+
+<!-- ============ 第四问 ============ -->
+<section class="card">
+  <h2><span class="tag">第 (4) 问</span>△EFG = ¼ 菱形：m = −1/3 或 −5/3</h2>
+
+  <ol class="steps">
+    <li>由 (3)：AC = 4−4m，BD = 8−8m，S<sub>菱形</sub> = ½·AC·BD = 16(1−m)²（m &lt; 1）。</li>
+    <li>x = 1 与 AB、AD 交于 E(1, −m²+2m+3)、F(1, −m²+6m−1)，相减得 <b>EF = 4−4m</b>，恰与 AC 等长（这一点由菱形的对称性也能直接看出）。</li>
+    <li>去掉顶点后的交点 G 只能在边 BC 或 CD 上：边 AB 与抛物线只交于 A、B；边 AD 与抛物线只交于 A（另一交点 x = 6−m 在 D 的右侧之外）。</li>
+    <li>设 G 到 x = 1 的距离为 d，由 ½·EF·d = ¼·16(1−m)² 得 <b>d = 2(1−m)</b>，于是 x<sub>G</sub> = 1 + d = <b>3−2m</b>（另一解 2m−1 &lt; 1 不在 BC、CD 的横坐标范围内，舍去）。</li>
+    <li>G 在 BC 上：y = −2x − m² − 2m + 9，代入 G(3−2m, −4m²+4m+4) 得 3m² − 2m − 1 = 0 ⇒ <b>m = −1/3</b>（m = 1 舍）。</li>
+    <li>G 在 CD 上：y = 2x − m² + 10m − 7，代入得 3m² + 2m − 5 = 0 ⇒ <b>m = −5/3</b>（m = 1 舍）。</li>
+  </ol>
+
+  <div class="panels panels-tall" id="q4Panels" style="margin-top:14px"></div>
+  <p class="note">两张图下方的比值由程序实时计算（S△EFG、S▱ABCD 均用同一套公式），可与手算对照：64/9 : 256/9 = 1/4。<b>注意 m = −5/3 那幅图里 F 与 G 恰好同高</b>（都等于 −124/9），△EFG 是以 EF 为竖直直角边的直角三角形。</p>
+</section>
+
+<!-- ============ 边界图 ============ -->
+<section class="card">
+  <h2><span class="tag">边界</span>四个临界位置：m = 0、1、2、4</h2>
+  <table class="t">
+    <tr><th>m</th><th>临界事件</th><th>对第 (3) 问的影响</th></tr>
+    <tr><td class="mono">0</td><td>B 与顶点 E(2,5) 重合；C(4,1) 也落在抛物线上</td><td>内部弧长度收缩为 0 → 不满足</td></tr>
+    <tr><td class="mono">1</td><td>A、B、C、D 四点重合于 (1,4)，平行四边形退化</td><td>图形不存在 → 不满足</td></tr>
+    <tr><td class="mono">2</td><td>A 与顶点 E 重合，E 落在菱形的顶点上</td><td>内部弧只在左侧、单调 → 满足（取等）</td></tr>
+    <tr><td class="mono">4</td><td>E 落在边 AD 上（AD: y = −2x + 9），m &gt; 4 后 E 跑到菱形外</td><td>内部弧只在左侧、单调 → 满足（取等）</td></tr>
+  </table>
+  <div class="panels" id="bdPanels" style="margin-top:14px"></div>
+</section>
+
+<footer>所有坐标、判定与面积均由页面实时计算（同一套公式：f(x)=−(x−2)²+5、A/B/C/D 的含 m 表达式、菱形半对角 2|1−m| 与 4|1−m|）。</footer>
+</div>
+
+<script>
+/* ================= 基础数学 ================= */
+const f = x => 5 - (x-2)*(x-2);
+
+function geom(m){
+  const yA = -m*m + 4*m + 1;
+  const A = {x:m,        y:yA,        name:'A'};
+  const B = {x:2-m,      y:5-m*m,     name:'B'};
+  const C = {x:4-3*m,    y:yA,        name:'C'};
+  const D = {x:2-m,      y:-m*m+8*m-3,name:'D'};
+  const E = {x:2,        y:5,         name:'E'};
+  const cx = 2-m, cy = yA;
+  const hx = 2*Math.abs(1-m), hy = 4*Math.abs(1-m);
+  const inside = (x,y) => (hx > 1e-9 && hy > 1e-9) &&
+        (Math.abs(x-cx)/hx + Math.abs(y-cy)/hy < 1 - 1e-9);
+  return {m,A,B,C,D,E,cx,cy,hx,hy,inside};
+}
+
+/* 弧：抛物线落在菱形内部的部分（按 x 细采样） */
+function arcs(g){
+  if(g.hx < 2e-6 || g.hy < 2e-6) return [];
+  const x0 = g.cx - g.hx, x1 = g.cx + g.hx;
+  const N = 1600, segs = [];
+  let cur = null;
+  for(let i=0;i<=N;i++){
+    const x = x0 + (x1-x0)*i/N;
+    const y = f(x);
+    if(g.inside(x,y)){
+      if(!cur) cur = [];
+      cur.push({x,y});
+    }else{
+      if(cur && cur.length>1) segs.push(cur);
+      cur = null;
+    }
+  }
+  if(cur && cur.length>1) segs.push(cur);
+  return segs;
+}
+
+function verdict(segs){
+  if(!segs.length) return {kind:'empty'};
+  let mn = Infinity, mx = -Infinity;
+  for(const s of segs) for(const p of s){ mn = Math.min(mn,p.x); mx = Math.max(mx,p.x); }
+  if(mx <= 2 + 1e-6) return {kind:'inc'};
+  if(mn >= 2 - 1e-6) return {kind:'dec'};
+  return {kind:'mixed'};
+}
+const VERDICT_TXT = {
+  empty:['mid','内部无抛物线点'],
+  inc  :['ok','内部弧在左侧：y 随 x 增大而增大'],
+  dec  :['ok','内部弧在右侧：y 随 x 增大而减小'],
+  mixed:['no','内部弧跨过顶点：非单调']
+};
+
+/* 第 (4) 问构件 */
+function triOf(m){
+  if(m >= 1) return null;
+  const Pe = {x:1, y:-m*m + 2*m + 3};   // x=1 与 AB 的交点
+  const Pf = {x:1, y:-m*m + 6*m - 1};   // x=1 与 AD 的交点
+  const G  = {x:3-2*m, y:f(3-2*m)};     // 右侧候选交点
+  return {Pe, Pf, G};
+}
+
+/* ================= 相机与绘制 ================= */
+function niceStep(min){
+  const cands = [0.1,0.2,0.5,1,2,5,10,20,50,100,200];
+  for(const c of cands) if(c >= min) return c;
+  return 500;
+}
+const fmt = v => Math.abs(v-Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(1);
+const nf  = v => Number(v.toFixed(3)).toString();
+const frac = v => {
+  if(Math.abs(v-Math.round(v)) < 1e-9) return String(Math.round(v));
+  for(let q=2;q<=99;q++){
+    const p = Math.round(v*q);
+    if(Math.abs(v - p/q) < 1e-9) return p + '/' + q;
+  }
+  return v.toFixed(2);
+};
+
+function makeCam(pts, W, H, minSpan, pad){
+  let mnx=Infinity,mxx=-Infinity,mny=Infinity,mxy=-Infinity;
+  for(const p of pts){
+    mnx=Math.min(mnx,p.x); mxx=Math.max(mxx,p.x);
+    mny=Math.min(mny,p.y); mxy=Math.max(mxy,p.y);
+  }
+  let w = Math.max(mxx-mnx, 1e-6), h = Math.max(mxy-mny, 1e-6);
+  const asp = W/H;
+  if(w/h < asp) w = h*asp; else h = w/asp;
+  w *= (pad || 1.22);
+  if(minSpan && w < minSpan) w = minSpan;
+  return {cx:(mnx+mxx)/2, cy:(mny+mxy)/2, w};
+}
+
+function draw(cv, g, cam, opts){
+  opts = opts || {};
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = cv.clientWidth | 0, H = cv.clientHeight | 0;
+  if(!W || !H) return;
+  const bw = Math.round(W*dpr), bh = Math.round(H*dpr);
+  if(cv.width !== bw || cv.height !== bh){ cv.width = bw; cv.height = bh; }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,W,H);
+
+  const s = W / cam.w;
+  const X = x => (x - cam.cx)*s + W/2;
+  const Y = y => H/2 - (y - cam.cy)*s;
+  const fs = opts.small ? 10 : 12;
+
+  /* ---- 网格 ---- */
+  const step = niceStep(26/s);
+  const left = cam.cx - W/(2*s), right = cam.cx + W/(2*s);
+  const top  = cam.cy + H/(2*s), bottom = cam.cy - H/(2*s);
+  ctx.lineWidth = 1; ctx.strokeStyle = '#eef1f6';
+  ctx.beginPath();
+  for(let i = Math.ceil(left/step); i*step <= right; i++){
+    const px = Math.round(X(i*step)) + .5;
+    ctx.moveTo(px,0); ctx.lineTo(px,H);
+  }
+  for(let j = Math.ceil(bottom/step); j*step <= top; j++){
+    const py = Math.round(Y(j*step)) + .5;
+    ctx.moveTo(0,py); ctx.lineTo(W,py);
+  }
+  ctx.stroke();
+
+  /* ---- 坐标轴（只在 0 落在视野内时绘制，避免出现假轴）---- */
+  const ay = Y(0), ax = X(0);
+  const xAxisIn = (0 > bottom && 0 < top);
+  const yAxisIn = (0 > left  && 0 < right);
+  ctx.strokeStyle = '#b6bcc7'; ctx.lineWidth = 1.3;
+  if(xAxisIn){
+    ctx.beginPath(); ctx.moveTo(0, ay); ctx.lineTo(W-2, ay); ctx.stroke();
+    ctx.fillStyle = '#b6bcc7';
+    ctx.beginPath(); ctx.moveTo(W-2,ay); ctx.lineTo(W-10,ay-4.5); ctx.lineTo(W-10,ay+4.5); ctx.closePath(); ctx.fill();
+  }
+  if(yAxisIn){
+    ctx.beginPath(); ctx.moveTo(ax, H); ctx.lineTo(ax, 2); ctx.stroke();
+    ctx.fillStyle = '#b6bcc7';
+    ctx.beginPath(); ctx.moveTo(ax,2); ctx.lineTo(ax-4.5,10); ctx.lineTo(ax+4.5,10); ctx.closePath(); ctx.fill();
+  }
+
+  /* ---- 轴刻度 ---- */
+  ctx.font = (fs-1.5) + 'px -apple-system,"PingFang SC",sans-serif';
+  ctx.fillStyle = '#98a1ae';
+  if(xAxisIn){
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for(let i = Math.ceil(left/step); i*step <= right; i++){
+      const v = i*step;
+      if(Math.abs(v) < step*0.4) continue;
+      if(ay > H-18) continue;
+      ctx.fillText(fmt(v), X(v), ay+4);
+    }
+    ctx.fillStyle = '#8b93a1'; ctx.font = 'italic ' + fs + 'px Cambria,serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('x', W-7, ay-4);
+  }
+  if(yAxisIn){
+    ctx.fillStyle = '#98a1ae';
+    ctx.font = (fs-1.5) + 'px -apple-system,"PingFang SC",sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for(let j = Math.ceil(bottom/step); j*step <= top; j++){
+      const v = j*step;
+      if(Math.abs(v) < step*0.4) continue;
+      if(ax < 18) continue;
+      ctx.fillText(fmt(v), ax-5, Y(v));
+    }
+    ctx.fillStyle = '#8b93a1'; ctx.font = 'italic ' + fs + 'px Cambria,serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('y', ax+6, 4);
+  }
+  if(xAxisIn && yAxisIn){
+    ctx.font = (fs-1) + 'px -apple-system,"PingFang SC",sans-serif';
+    ctx.fillStyle = '#98a1ae'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText('O', ax-4, ay+3);
+  }
+
+  /* ---- 菱形 ---- */
+  const P = [g.A,g.B,g.C,g.D];
+  ctx.beginPath();
+  P.forEach((p,i)=> i ? ctx.lineTo(X(p.x),Y(p.y)) : ctx.moveTo(X(p.x),Y(p.y)));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(59,130,246,.075)';
+  ctx.fill();
+  ctx.strokeStyle = '#9aa6b8'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  if(opts.diag !== false){
+    ctx.setLineDash([5,4]); ctx.strokeStyle = 'rgba(120,130,150,.5)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(X(g.A.x),Y(g.A.y)); ctx.lineTo(X(g.C.x),Y(g.C.y));
+    ctx.moveTo(X(g.B.x),Y(g.B.y)); ctx.lineTo(X(g.D.x),Y(g.D.y));
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  /* ---- 抛物线 ---- */
+  const xa = left-1, xb = right+1, NP = 300;
+  ctx.beginPath();
+  for(let i=0;i<=NP;i++){
+    const x = xa + (xb-xa)*i/NP;
+    const px = X(x), py = Y(f(x));
+    i ? ctx.lineTo(px,py) : ctx.moveTo(px,py);
+  }
+  ctx.strokeStyle = '#7fa5ef'; ctx.lineWidth = 2.3; ctx.lineJoin = 'round'; ctx.stroke();
+
+  /* ---- x = 1 ---- */
+  const tri = opts.tri ? triOf(g.m) : null;
+  if(tri){
+    ctx.setLineDash([6,5]); ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(X(1),0); ctx.lineTo(X(1),H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = (fs-1.5) + 'px -apple-system,"PingFang SC",sans-serif';
+    ctx.fillStyle = '#0284c7'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('x = 1', X(1)+5, 6);
+  }
+
+  /* ---- 菱形内部的弧 ---- */
+  const segs = arcs(g);
+  if(segs.length){
+    ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 4.5;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for(const sg of segs){
+      ctx.beginPath();
+      sg.forEach((p,i)=> i ? ctx.lineTo(X(p.x),Y(p.y)) : ctx.moveTo(X(p.x),Y(p.y)));
+      ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+  }
+
+  /* ---- △EFG ---- */
+  if(tri){
+    ctx.beginPath();
+    ctx.moveTo(X(tri.Pe.x),Y(tri.Pe.y));
+    ctx.lineTo(X(tri.Pf.x),Y(tri.Pf.y));
+    ctx.lineTo(X(tri.G.x),Y(tri.G.y));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(245,158,11,.26)'; ctx.fill();
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.4; ctx.stroke();
+  }
+
+  /* ---- 点与标签 ---- */
+  function tagText(t, px, py, color, size){
+    ctx.font = '600 ' + (size||fs) + 'px -apple-system,"PingFang SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 3.6; ctx.strokeStyle = 'rgba(255,255,255,.95)';
+    ctx.strokeText(t, px, py);
+    ctx.fillStyle = color; ctx.fillText(t, px, py);
+  }
+  const cen = {x:g.cx, y:g.cy};
+  const place = (p, r) => {
+    let vx = p.x-cen.x, vy = p.y-cen.y;
+    const L = Math.hypot(vx,vy) || 1;
+    let dx = vx/L*r, dy = -vy/L*r;
+    if(Math.abs(dx) < 5) dx = dx >= 0 ? 5 : -5;
+    return {dx, dy};
+  };
+
+  for(const p of P){
+    ctx.beginPath(); ctx.arc(X(p.x),Y(p.y), 4.2, 0, Math.PI*2);
+    ctx.fillStyle = '#1f2937'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.stroke();
+  }
+  const degen = g.hx < 1e-6;
+  if(!degen){
+    for(const p of P){
+      const o = place(p, 14);
+      tagText(p.name, X(p.x)+o.dx, Y(p.y)+o.dy, '#111827');
+    }
+  }else{
+    tagText('A=B=C=D', X(1)+12, Y(4)-15, '#111827');
+  }
+
+  /* E(A 重合时也不至于完全重叠) */
+  ctx.beginPath(); ctx.arc(X(2),Y(5), 5.2, 0, Math.PI*2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2.4; ctx.stroke();
+  const bOnE = Math.hypot(g.B.x-2, g.B.y-5) < 0.35;
+  if(bOnE) tagText('E', X(2)-15, Y(5)-13, '#7c3aed');
+  else     tagText('E', X(2)+13, Y(5)-13, '#7c3aed');
+
+  if(tri){
+    for(const p of [tri.Pe, tri.Pf, tri.G]){
+      ctx.beginPath(); ctx.arc(X(p.x),Y(p.y), 4.4, 0, Math.PI*2);
+      ctx.fillStyle = '#f59e0b'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    tagText('E', X(tri.Pe.x)-13, Y(tri.Pe.y)-4, '#b45309');
+    tagText('F', X(tri.Pf.x)-13, Y(tri.Pf.y)+4, '#b45309');
+    tagText('G', X(tri.G.x)+13, Y(tri.G.y)-2, '#b45309');
+  }
+}
+
+/* ================= 静态小图 ================= */
+function renderStatic(cv, m, opts){
+  opts = opts || {};
+  const g = geom(m);
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if(!W || !H) return;
+  const pts = [g.A,g.B,g.C,g.D,g.E];
+  if(opts.tri){
+    const t = triOf(m);
+    if(t) pts.push(t.Pe, t.Pf, t.G);
+  }
+  const cam = makeCam(pts, W, H, opts.minSpan || 4.6, opts.pad || 1.12);
+  draw(cv, g, cam, opts);
+}
+
+/* ================= 主体：动态演示 ================= */
+const mainCv = document.getElementById('mainCanvas');const mRange = document.getElementById('mRange');
+const mShown = document.getElementById('mShown');
+const chkTri = document.getElementById('chkTri');
+const readoutEl = document.getElementById('readout');
+
+let mCur = 1.5, mTgt = 1.5, camCur = null, lastShown = -9;
+
+/* 主图取景：以几何体为主；原点离得不太远时一并框进来，保证 O 与坐标轴可见 */
+function fitMain(g, W, H, extra){
+  const pts = [g.A,g.B,g.C,g.D,g.E].concat(extra || []);
+  let mny = Infinity, mxy = -Infinity;
+  for(const p of pts){ mny = Math.min(mny,p.y); mxy = Math.max(mxy,p.y); }
+  const h = Math.max(mxy-mny, 0.6);
+  if((mny > 0 && mny < 0.6*h) || (mxy < 0 && -mxy < 0.6*h)) pts.push({x:0,y:0});
+  return makeCam(pts, W, H, 5, 1.18);
+}
+
+function updateReadout(g){
+  const segs = arcs(g);
+  const v = verdict(segs);
+  const t = (g.hx > 1e-9) ? (Math.abs(2-g.cx)/g.hx + Math.abs(5-g.cy)/g.hy) : Infinity;
+  const eStat = !isFinite(t) ? '半径退化' :
+                (t < 1-1e-9 ? '严格内部' : (Math.abs(t-1) < 2e-6 ? '恰在边界上' : '外部'));
+  const [cls, txt] = VERDICT_TXT[v.kind];
+  const ok = v.kind === 'inc' || v.kind === 'dec';
+
+  readoutEl.innerHTML = `
+    <div class="row"><span class="lb">m</span><span class="v">${nf(g.m)}</span></div>
+    <div class="row"><span class="lb">A</span><span class="v">(${nf(g.A.x)}, ${nf(g.A.y)})</span></div>
+    <div class="row"><span class="lb">B</span><span class="v">(${nf(g.B.x)}, ${nf(g.B.y)})</span></div>
+    <div class="row"><span class="lb">C</span><span class="v">(${nf(g.C.x)}, ${nf(g.C.y)})</span></div>
+    <div class="row"><span class="lb">D</span><span class="v">(${nf(g.D.x)}, ${nf(g.D.y)})</span></div>
+    <div class="row"><span class="lb">半对角 (AC, BD)</span><span class="v">${nf(g.hx)}, ${nf(g.hy)}</span></div>
+    <div class="row"><span class="lb">顶点 E(2,5)</span><span class="v">${eStat}</span></div>
+    <div class="row"><span class="lb">内部弧</span><span class="v">${txt}</span></div>
+    <div class="state ${ok?'ok':'no'}">第 (3) 问条件：${ok?'满足 ✓':'不满足 ✗'}</div>
+  `;
+}
+
+function loop(){
+  const W = mainCv.clientWidth, H = mainCv.clientHeight;
+  mCur += (mTgt - mCur)*0.15;
+  if(Math.abs(mTgt - mCur) < 4e-4) mCur = mTgt;
+
+  const g = geom(mCur);
+  const useTri = chkTri.checked && mCur < 1;
+  const t = useTri ? triOf(mCur) : null;
+  const tgt = fitMain(g, W, H, t ? [t.Pe,t.Pf,t.G] : null);
+
+  if(!camCur) camCur = {cx:tgt.cx, cy:tgt.cy, w:tgt.w};
+  const k = 0.16;
+  camCur.cx += (tgt.cx - camCur.cx)*k;
+  camCur.cy += (tgt.cy - camCur.cy)*k;
+  camCur.w  += (tgt.w  - camCur.w )*k;
+
+  draw(mainCv, g, camCur, {tri: useTri});
+
+  if(Math.abs(mCur - lastShown) > 8e-4){
+    lastShown = mCur;
+    mShown.textContent = nf(mCur);
+    updateReadout(g);
+    syncChips();
+  }
+  requestAnimationFrame(loop);
+}
+
+/* 滑块与快捷按钮 */
+function setM(v, instant){
+  mTgt = v;
+  if(instant) mCur = v;
+  mRange.value = v;
+  mShown.textContent = nf(v);
+  syncChips();
+}
+
+mRange.addEventListener('input', () => setM(parseFloat(mRange.value), true));
+chkTri.addEventListener('change', () => { lastShown = -9; });
+
+const CHIPS = [
+  {v:-5/3, t:'−5/3'}, {v:-1, t:'−1'}, {v:-1/3, t:'−1/3'}, {v:0, t:'0'},
+  {v:0.5, t:'0.5'}, {v:1, t:'1'}, {v:1.5, t:'1.5'}, {v:2, t:'2'},
+  {v:3, t:'3'}, {v:4, t:'4'}, {v:5, t:'5'}
+];
+const chipsEl = document.getElementById('chips');
+CHIPS.forEach(c => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = c.t;
+  b.dataset.v = c.v;
+  b.addEventListener('click', () => setM(c.v, false));
+  chipsEl.appendChild(b);
+});
+function syncChips(){
+  chipsEl.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', Math.abs(parseFloat(b.dataset.v) - mTgt) < 1e-9);
+  });
+}
+
+/* ================= 小图构建 ================= */
+function buildPanels(hostId, configs){
+  const host = document.getElementById(hostId);
+  configs.forEach(cfg => {
+    const card = document.createElement('div');
+    card.className = 'panel-card';
+    card.innerHTML =
+      '<canvas></canvas>' +
+      '<div class="cap"><div class="cap-t">' + cfg.title + '</div>' +
+      '<div class="cap-d">' + (cfg.note || '') + '</div>' +
+      '<div class="cap-b"></div></div>';
+    host.appendChild(card);
+
+    const cv = card.querySelector('canvas');
+    const badgeEl = card.querySelector('.cap-b');
+
+    const render = () => {
+      renderStatic(cv, cfg.m, cfg.opts || {});
+      if(cfg.noBadge && !cfg.extra){ badgeEl.remove(); return; }
+      if(cfg.extra){ badgeEl.innerHTML = cfg.extra(cfg.m); return; }
+      const g = geom(cfg.m);
+      const v = verdict(arcs(g));
+      const [cls, txt] = VERDICT_TXT[v.kind];
+      const ok = v.kind === 'inc' || v.kind === 'dec';
+      badgeEl.innerHTML = '<span class="badge ' + (ok ? 'ok' : (v.kind === 'empty' ? 'mid' : 'no')) + '">' +
+        (ok ? '✓ ' : '✗ ') + txt + '</span>';
+    };
+    if(window.ResizeObserver){
+      new ResizeObserver(render).observe(cv);
+    }
+    requestAnimationFrame(render);
+    if(cfg.link !== undefined){
+      cv.style.cursor = 'pointer';
+      cv.title = '点击把滑块跳到 m = ' + nf(cfg.link);
+      cv.addEventListener('click', () => { setM(cfg.link, false); window.scrollTo({top:0, behavior:'smooth'}); });
+    }
+  });
+}
+
+/* 第 (3) 问：典型情形 */
+buildPanels('q3Panels', [
+  {m:-1,  title:'m = −1 &lt; 0', note:'内部弧只在对称轴右侧（B 的右下方），y 随 x 增大而减小。', link:-1},
+  {m:0.5, title:'m = 0.5（0 &lt; m &lt; 1）', note:'菱形被压在 A、B 之间，内部没有任何抛物线上的点。', link:0.5},
+  {m:1.5, title:'m = 1.5（1 &lt; m &lt; 2）', note:'内部弧只在对称轴左侧，y 随 x 增大而增大。', link:1.5},
+  {m:3,   title:'m = 3（2 &lt; m &lt; 4）', note:'顶点 E 落在菱形内部，玫红弧分成两段、跨过顶点。', link:3},
+  {m:5,   title:'m = 5 ≥ 4', note:'顶点 E 已在菱形外，内部弧回到左侧，仍单调增。', link:5}
+]);
+
+/* 第 (4) 问：两个答案 */
+buildPanels('q4Panels', [
+  {m:-1/3, title:'m = −1/3：G 在边 BC 上', note:'G(3−2m, −4m²+4m+4) 代入 BC：y = −2x − m² − 2m + 9，得 3m²−2m−1 = 0。', opts:{tri:true}, link:-1/3,
+   extra:(m)=>{
+     const t = triOf(m), EF = t.Pe.y - t.Pf.y, d = Math.abs(t.G.x - 1);
+     const S = 0.5*EF*d, Sr = 16*(1-m)*(1-m);
+     return '<span class="badge ok">S△EFG : S▱ABCD = ' + frac(S) + ' : ' + frac(Sr) + ' = ' + frac(S/Sr) + '</span>';
+   }},
+  {m:-5/3, title:'m = −5/3：G 在边 CD 上', note:'同一点 G 代入 CD：y = 2x − m² + 10m − 7，得 3m²+2m−5 = 0。', opts:{tri:true}, link:-5/3,
+   extra:(m)=>{
+     const t = triOf(m), EF = t.Pe.y - t.Pf.y, d = Math.abs(t.G.x - 1);
+     const S = 0.5*EF*d, Sr = 16*(1-m)*(1-m);
+     return '<span class="badge ok">S△EFG : S▱ABCD = ' + frac(S) + ' : ' + frac(Sr) + ' = ' + frac(S/Sr) + '</span>';
+   }}
+]);
+
+/* 边界图 */
+buildPanels('bdPanels', [
+  {m:0, title:'m = 0', note:'B 与顶点 E 重合，C(4,1) 也落在抛物线上；内部弧长度 → 0。', opts:{pad:1.28}},
+  {m:1, title:'m = 1（退化）', note:'A、B、C、D 四点重合成 (1,4)，平行四边形退化为一个点。', opts:{minSpan:6, pad:1.1}},
+  {m:2, title:'m = 2', note:'A 落在顶点 E 上（E 在菱形顶点处“相切”），内部弧只在左侧。'},
+  {m:4, title:'m = 4', note:'E 落在边 AD（y = −2x + 9）上；m > 4 时 E 移到菱形外。'}
+]);
+
+/* ================= 启动 ================= */
+requestAnimationFrame(() => {
+  setM(1.5, true);
+  loop();
+});
+</script>
+</body>
+</html>
